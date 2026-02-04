@@ -1,12 +1,21 @@
 ﻿using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameWordManager : MonoBehaviour
 {
+    public static GameWordManager Instance;
+
+    public int CurrentLevel => level;
+
+    public HUDUI hud;
     public BoardGenerator board;
     public TimerManager timer;
 
     int level = 1;
     string currentWord;
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
@@ -31,6 +40,9 @@ public class GameManager : MonoBehaviour
             board.OnSolved();
 
             Invoke(nameof(NextLevel),1f);
+            PlayerProgressionManager.AddXPForClearedLevel(level);
+            hud.UpdatePlayerLevel();
+
             Debug.Log("Solved with: " + formed);
         }
 
@@ -47,7 +59,11 @@ public class GameManager : MonoBehaviour
         currentWord = WordDictionary.GetWord(len);
 
         board.Generate(currentWord, level);
-        timer.StartTimer(300);
+        timer.StartTimer(PlayerProgressionManager.GetTimePerLevel());
+
+        hud.UpdateStreak(level);
+        hud.UpdatePlayerLevel();
+
         //timer.StartTimer(DifficultyManager.GetTimeLimit(level));
     }
 
@@ -60,8 +76,11 @@ public class GameManager : MonoBehaviour
 
     public void Lose()
     {
+        hud.UpdateStreak(level);
+
         level = 1;
         WordDictionary.ResetStreak();
         StartLevel();
+
     }
 }

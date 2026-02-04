@@ -61,10 +61,9 @@ public class BoardGenerator : MonoBehaviour
                 }
             }
 
-        } while (
-    !HasAtLeastOneValidWord()
-    || IsSolvedAtStart(word)
-);
+        } while (IsSolved(word) || IsInvalidStartState());
+
+
 
 
     }
@@ -176,6 +175,32 @@ public class BoardGenerator : MonoBehaviour
         }
 
         return false;
+    }
+    public string GetCurrentCenterWord()
+    {
+        if (columns == null || columns.Length == 0)
+            return "";
+
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+        foreach (var col in columns)
+        {
+            if (col == null)
+                continue; // locked column handled separately
+
+            sb.Append(col.GetCenterLetter());
+        }
+
+        return sb.ToString();
+    }
+    bool IsInvalidStartState()
+    {
+        string formed = GetCurrentCenterWord();
+
+        if (formed.Length < 3)
+            return false;
+
+        return WordDictionary.allWords.Contains(formed);
     }
 
 

@@ -205,3 +205,5 @@ MonoBehaviour:
   letterBlockPrefab: {fileID: 7946718779537187414, guid: be8ae185af1c913409d9f394795afa3b, type: 3}
   letterHeight: 100
   verticalGap: 3
+  scrollSensitivity: 1500
+  scrollSnapDelay: 0.2

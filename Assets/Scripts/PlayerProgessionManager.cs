@@ -1,0 +1,66 @@
+using UnityEngine;
+
+public static class PlayerProgressionManager
+{
+    // ===== CONSTANTS =====
+    const string LEVEL_KEY = "PLAYER_LEVEL";
+    const string XP_KEY = "PLAYER_XP";
+
+    const int BASE_TIME = 10;
+    const int TIME_PER_LEVEL = 2;
+
+    const int BASE_XP_PER_LEVEL = 50;
+
+    // XP curve (simple linear for now, infinite-safe)
+    static int XPToNextLevel(int level)
+    {
+        return level * 200;
+    }
+
+    // ===== PLAYER LEVEL =====
+    public static int PlayerLevel
+    {
+        get => PlayerPrefs.GetInt(LEVEL_KEY, 1);
+        private set => PlayerPrefs.SetInt(LEVEL_KEY, value);
+    }
+
+    // ===== PLAYER XP =====
+    static int PlayerXP
+    {
+        get => PlayerPrefs.GetInt(XP_KEY, 0);
+        set => PlayerPrefs.SetInt(XP_KEY, value);
+    }
+
+    // ===== TIME PER GAME LEVEL =====
+    public static int GetTimePerLevel()
+    {
+        return BASE_TIME + (PlayerLevel - 1) * TIME_PER_LEVEL;
+    }
+
+    // ===== XP GAIN =====
+    public static void AddXPForClearedLevel(int clearedLevel)
+    {
+        int gainedXP = clearedLevel * BASE_XP_PER_LEVEL;
+        PlayerXP += gainedXP;
+
+        CheckLevelUp();
+    }
+
+    static void CheckLevelUp()
+    {
+        while (PlayerXP >= XPToNextLevel(PlayerLevel))
+        {
+            PlayerXP -= XPToNextLevel(PlayerLevel);
+            PlayerLevel++;
+        }
+
+        PlayerPrefs.Save();
+    }
+
+    // ===== DEBUG / RESET =====
+    public static void ResetProgress()
+    {
+        PlayerPrefs.DeleteKey(LEVEL_KEY);
+        PlayerPrefs.DeleteKey(XP_KEY);
+    }
+}

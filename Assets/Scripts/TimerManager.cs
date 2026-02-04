@@ -6,11 +6,11 @@ public class TimerManager : MonoBehaviour
 {
     public TextMeshProUGUI timerText;
     float time;
-    GameManager gm;
+    GameWordManager gm;
 
     void Start()
     {
-        gm = FindObjectOfType<GameManager>();
+        gm = FindObjectOfType<GameWordManager>();
     }
 
     public void StartTimer(float t)

@@ -6,12 +6,23 @@ using UnityEngine.UI;
 
 
 public class LetterColumn : MonoBehaviour,
-    IBeginDragHandler, IDragHandler, IEndDragHandler
+    IBeginDragHandler,
+    IDragHandler,
+    IEndDragHandler,
+    IScrollHandler,
+    IPointerExitHandler
+
 {
     public RectTransform content;
     public GameObject letterBlockPrefab;
     public float letterHeight = 80f;
     public float verticalGap = 10f;
+
+    [Header("Input")]
+    public float scrollSensitivity = 120f;
+    bool isScrolling = false;
+    float lastScrollTime;
+    public float scrollSnapDelay = 0.12f; // tweakable
 
 
     char[] letters;
@@ -165,23 +176,25 @@ public class LetterColumn : MonoBehaviour,
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        // determine nearest step
-        int targetStep =
-            Mathf.RoundToInt(dragY / StepSize);
+        isScrolling = false; // cancel any scroll state
+        SnapToNearestStep();
+        //// determine nearest step
+        //int targetStep =
+        //    Mathf.RoundToInt(dragY / StepSize);
 
-        targetStep = Mathf.Clamp(targetStep, minStep, maxStep);
+        //targetStep = Mathf.Clamp(targetStep, minStep, maxStep);
 
-        currentStep = targetStep;
+        //currentStep = targetStep;
 
-        float snappedY = currentStep * StepSize;
+        //float snappedY = currentStep * StepSize;
 
-        content.DOAnchorPosY(snappedY, 0.05f)
-        .SetEase(Ease.OutQuart);
+        //content.DOAnchorPosY(snappedY, 0.05f)
+        //.SetEase(Ease.OutQuart);
 
 
-        dragY = snappedY;
+        //dragY = snappedY;
 
-        UpdateLetterColors();
+        //UpdateLetterColors();
     }
 
     public void PlaySolvedSqueeze()
@@ -225,6 +238,79 @@ public class LetterColumn : MonoBehaviour,
 
         letterBackgrounds[idx].color =
             ColorSchemeManager.Current.solvedCenterLetter;
+    }
+    void Update()
+    {
+        if (isSolved)
+            return;
+
+        if (isScrolling && Time.unscaledTime - lastScrollTime > scrollSnapDelay)
+        {
+            isScrolling = false;
+            SnapToNearestStep();
+        }
+    }
+
+    public void OnScroll(PointerEventData eventData)
+    {
+        if (isSolved)
+            return;
+
+        float scroll = eventData.scrollDelta.y;
+
+        if (scroll == 0)
+            return;
+
+        // scroll up = next letter
+        // scroll down = previous letter
+        int direction = scroll > 0 ? 1 : -1;
+
+        int targetStep = currentStep + direction;
+        targetStep = Mathf.Clamp(targetStep, minStep, maxStep);
+
+        if (targetStep == currentStep)
+            return;
+
+        currentStep = targetStep;
+
+        float snappedY = currentStep * StepSize;
+
+        content.DOAnchorPosY(snappedY, 0.05f)
+               .SetEase(Ease.OutQuart);
+
+        dragY = snappedY;
+
+        UpdateLetterColors();
+    }
+
+
+
+    void SnapToNearestStep()
+    {
+        int targetStep =
+            Mathf.RoundToInt(dragY / StepSize);
+
+        targetStep = Mathf.Clamp(targetStep, minStep, maxStep);
+
+        currentStep = targetStep;
+
+        float snappedY = currentStep * StepSize;
+
+        content.DOAnchorPosY(snappedY, 0.05f)
+               .SetEase(Ease.OutQuart);
+
+        dragY = snappedY;
+
+        UpdateLetterColors();
+    }
+
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (isSolved)
+            return;
+
+        SnapToNearestStep();
     }
 
 }
