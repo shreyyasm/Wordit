@@ -1,16 +1,34 @@
 using UnityEngine;
 
-public class PlayerCurrencymanager : MonoBehaviour
+public static class PlayerCurrencyManager
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    const string COINS_KEY = "PLAYER_COINS";
+
+    public static int Coins
     {
-        
+        get => PlayerPrefs.GetInt(COINS_KEY, 0);
+        private set => PlayerPrefs.SetInt(COINS_KEY, value);
     }
 
-    // Update is called once per frame
-    void Update()
+    public static bool CanAfford(int amount)
     {
-        
+        return Coins >= amount;
     }
+
+    public static bool SpendCoins(int amount)
+    {
+        if (!CanAfford(amount))
+            return false;
+
+        Coins -= amount;
+        PlayerPrefs.Save();
+        return true;
+    }
+
+    public static void AddCoins(int amount)
+    {
+        Coins += amount;
+        PlayerPrefs.Save();
+    }
+
 }

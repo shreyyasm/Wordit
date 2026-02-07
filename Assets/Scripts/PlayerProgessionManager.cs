@@ -1,10 +1,12 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public static class PlayerProgressionManager
 {
     // ===== CONSTANTS =====
     const string LEVEL_KEY = "PLAYER_LEVEL";
     const string XP_KEY = "PLAYER_XP";
+    const int LEVEL_UP_COIN_REWARD = 100;
+
 
     const int BASE_TIME = 10;
     const int TIME_PER_LEVEL = 2;
@@ -14,8 +16,12 @@ public static class PlayerProgressionManager
     // XP curve (simple linear for now, infinite-safe)
     static int XPToNextLevel(int level)
     {
-        return level * 200;
+        // Level 1 → 200
+        // Level 2 → 300
+        // Level 3 → 400
+        return (level + 1) * 100;
     }
+
 
     // ===== PLAYER LEVEL =====
     public static int PlayerLevel
@@ -46,16 +52,27 @@ public static class PlayerProgressionManager
         CheckLevelUp();
     }
 
+    
     static void CheckLevelUp()
     {
-        while (PlayerXP >= XPToNextLevel(PlayerLevel))
+        if (PlayerXP < XPToNextLevel(PlayerLevel))
+            return;
+
+        // LEVEL UP
+        PlayerLevel++;
+
+        // 🎁 reward coins on EVEN levels
+        if (PlayerLevel % 2 == 0)
         {
-            PlayerXP -= XPToNextLevel(PlayerLevel);
-            PlayerLevel++;
+            PlayerCurrencyManager.AddCoins(100);
         }
+
+        // 🔁 RESET XP (NO CARRY OVER)
+        PlayerXP = 0;
 
         PlayerPrefs.Save();
     }
+
 
     // ===== DEBUG / RESET =====
     public static void ResetProgress()

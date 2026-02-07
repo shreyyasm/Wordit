@@ -7,6 +7,12 @@ public class HUDUI : MonoBehaviour
     public TextMeshProUGUI playerLevelText;
     public TextMeshProUGUI streakText;
 
+    [Header("Coins")]
+    public TextMeshProUGUI coinsText;
+
+    [Header("Hint")]
+    public TextMeshProUGUI hintText;
+
     void Start()
     {
         RefreshAll();
@@ -16,6 +22,8 @@ public class HUDUI : MonoBehaviour
     {
         UpdatePlayerLevel();
         UpdateStreak(GameWordManager.Instance.CurrentLevel);
+        UpdateCoins();
+        HideHint();
     }
 
     public void UpdatePlayerLevel()
@@ -26,6 +34,23 @@ public class HUDUI : MonoBehaviour
 
     public void UpdateStreak(int streak)
     {
-        streakText.text = $"STREAK {streak}";
+        streakText.text = streak.ToString();
     }
+    public void UpdateCoins()
+    {
+        // <sprite=0> assumes your coin sprite is index 0
+        coinsText.text = $"<sprite=0> {PlayerCurrencyManager.Coins}";
+    }
+
+    public void ShowHint(string word)
+    {
+        hintText.text = $"HINT: {word}";
+        hintText.gameObject.SetActive(true);
+    }
+
+    public void HideHint()
+    {
+        hintText.gameObject.SetActive(false);
+    }
+
 }

@@ -1,16 +1,17 @@
 ﻿using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class ColorSchemeManager : MonoBehaviour
 {
+    [SerializeField] public Image BackgroundUI;
+
     [Header("Color Schemes")]
     public ColorScheme[] schemes;
 
-    [Header("Scene References")]
-    public Camera mainCamera;
-
     static ColorScheme currentScheme;
 
+    
     public static ColorScheme Current => currentScheme;
 
     public void ApplyRandomScheme()
@@ -29,8 +30,7 @@ public class ColorSchemeManager : MonoBehaviour
 
     void ApplyScheme(ColorScheme scheme)
     {
-        // 1️⃣ Background
-        if (mainCamera != null)
-            mainCamera.backgroundColor = scheme.background;
+        
+           BackgroundUI.color = scheme.background;
     }
 }

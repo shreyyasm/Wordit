@@ -3,6 +3,9 @@
 public class GameWordManager : MonoBehaviour
 {
     public static GameWordManager Instance;
+    public WinTransition winTransition;
+    const int HINT_COST = 500;
+    const float HINT_TIME_BONUS = 10f;
 
     public int CurrentLevel => level;
 
@@ -22,6 +25,7 @@ public class GameWordManager : MonoBehaviour
         FindAnyObjectByType<ColorSchemeManager>().ApplyRandomScheme();
 
         StartLevel();
+        
     }
     bool levelSolved = false;
 
@@ -39,9 +43,13 @@ public class GameWordManager : MonoBehaviour
             // 🔥 tell the board to switch center squares to solved color
             board.OnSolved();
 
-            Invoke(nameof(NextLevel),1f);
+            winTransition.Play(() =>
+            {
+                NextLevel();
+            });
             PlayerProgressionManager.AddXPForClearedLevel(level);
             hud.UpdatePlayerLevel();
+            hud.UpdateCoins();
 
             Debug.Log("Solved with: " + formed);
         }
@@ -54,7 +62,7 @@ public class GameWordManager : MonoBehaviour
     void StartLevel()
     {
         levelSolved = false;
-
+        winTransition.DelaodStreak();
         int len = DifficultyManager.GetWordLength(level);
         currentWord = WordDictionary.GetWord(len);
 
@@ -63,6 +71,7 @@ public class GameWordManager : MonoBehaviour
 
         hud.UpdateStreak(level);
         hud.UpdatePlayerLevel();
+        hud.HideHint();
 
         //timer.StartTimer(DifficultyManager.GetTimeLimit(level));
     }
@@ -83,4 +92,32 @@ public class GameWordManager : MonoBehaviour
         StartLevel();
 
     }
+    public void UseHint()
+    {
+        if (!PlayerCurrencyManager.CanAfford(HINT_COST))
+        {
+            Debug.Log("Not enough coins for hint");
+            return;
+        }
+
+        bool spent = PlayerCurrencyManager.SpendCoins(HINT_COST);
+        if (!spent)
+            return;
+
+        // show the word as hint
+        hud.ShowHint(currentWord);
+
+        // add temporary time bonus
+        timer.AddTime(HINT_TIME_BONUS);
+
+        // update coin UI
+        hud.UpdateCoins();
+    }
+    public void AddCoins(int amount)
+    {
+        PlayerCurrencyManager.AddCoins(amount);
+        hud.UpdateCoins();
+    }
+
+
 }
