@@ -4,7 +4,7 @@ using UnityEngine;
 public class HUDUI : MonoBehaviour
 {
     [Header("Text References")]
-    public TextMeshProUGUI playerLevelText;
+    public TextMeshProUGUI playerXPText;
     public TextMeshProUGUI streakText;
 
     [Header("Coins")]
@@ -29,12 +29,14 @@ public class HUDUI : MonoBehaviour
     public void UpdatePlayerLevel()
     {
         int playerLevel = PlayerProgressionManager.PlayerLevel;
-        playerLevelText.text = $"PLAYER LVL {playerLevel}";
+        playerXPText.text = PlayerProgressionManager.PlayerBaseXP.ToString();
     }
 
     public void UpdateStreak(int streak)
     {
         streakText.text = streak.ToString();
+        // <sprite=0> assumes your coin sprite is index 0
+        streakText.text = $"<sprite=0>{streak}";
     }
     public void UpdateCoins()
     {

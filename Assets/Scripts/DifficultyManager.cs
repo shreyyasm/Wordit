@@ -3,15 +3,15 @@
 public static class DifficultyManager
 {
     public static int minColumnHeight = 2;
-    public static int maxColumnHeight = 6;
+    public static int maxColumnHeight = 5;
     // controls how height grows inside a tier (0 → 1)
     public static AnimationCurve columnHeightCurve =
         AnimationCurve.Linear(0, 0, 1, 1);
 
     // ===== TUNING VARIABLES =====
     public static int baseWordLength = 3;
-    public static int levelsPerTier = 4;     // every 4 levels difficulty increases
-    public static int maxWordLength = 7;
+    public static int levelsPerTier = 5;     // every 4 levels difficulty increases
+    public static int maxWordLength = 10;
 
     public static int baseMinHeight = 2;
     public static int baseMaxHeight = 3;

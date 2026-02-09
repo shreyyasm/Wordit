@@ -11,8 +11,16 @@ public static class PlayerProgressionManager
     const int BASE_TIME = 10;
     const int TIME_PER_LEVEL = 2;
 
-    const int BASE_XP_PER_LEVEL = 50;
+    public const int BASE_XP_PER_LEVEL = 10;
 
+    const string BASE_XP_KEY = "PLAYER_BASE_XP";
+    const int BASE_XP = 0;
+
+    const string LAST_GAINED_XP_KEY = "LAST_GAINED_XP";
+
+    // ===== SESSION XP =====
+    static int sessionXP = 0;
+    public static int SessionXP => sessionXP;
     // XP curve (simple linear for now, infinite-safe)
     static int XPToNextLevel(int level)
     {
@@ -36,23 +44,54 @@ public static class PlayerProgressionManager
         get => PlayerPrefs.GetInt(XP_KEY, 0);
         set => PlayerPrefs.SetInt(XP_KEY, value);
     }
-
+    public static int PlayerBaseXP
+    {
+        get => PlayerPrefs.GetInt(BASE_XP_KEY, 0);
+        set => PlayerPrefs.SetInt(BASE_XP_KEY, value);
+    }
     // ===== TIME PER GAME LEVEL =====
     public static int GetTimePerLevel()
     {
         return BASE_TIME + (PlayerLevel - 1) * TIME_PER_LEVEL;
     }
-
-    // ===== XP GAIN =====
-    public static void AddXPForClearedLevel(int clearedLevel)
+    static int LastGainedXP
     {
-        int gainedXP = clearedLevel * BASE_XP_PER_LEVEL;
+        get => PlayerPrefs.GetInt(LAST_GAINED_XP_KEY, 0);
+        set => PlayerPrefs.SetInt(LAST_GAINED_XP_KEY, value);
+    }
+    public static int LastAwardedXP => LastGainedXP;
+    // ===== XP GAIN =====
+    public static void AddXPForClearedLevel()
+    {
+        int gainedXP;
+
+        if (LastGainedXP == 0)
+        {
+            gainedXP = BASE_XP_PER_LEVEL;
+        }
+        else
+        {
+            gainedXP = LastGainedXP * 2;
+        }
+
+        LastGainedXP = gainedXP;
+
+        // 🔹 GLOBAL XP
         PlayerXP += gainedXP;
+        PlayerBaseXP += gainedXP;
+
+        // 🔹 SESSION XP
+        sessionXP += gainedXP;
 
         CheckLevelUp();
     }
 
-    
+    // ===== SESSION CONTROL =====
+    public static void ResetSessionXP()
+    {
+        sessionXP = 0;
+        LastGainedXP = 0; // optional but recommended
+    }
     static void CheckLevelUp()
     {
         if (PlayerXP < XPToNextLevel(PlayerLevel))
@@ -79,5 +118,6 @@ public static class PlayerProgressionManager
     {
         PlayerPrefs.DeleteKey(LEVEL_KEY);
         PlayerPrefs.DeleteKey(XP_KEY);
+        PlayerPrefs.DeleteKey("LAST_GAINED_XP");
     }
 }

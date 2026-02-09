@@ -45,6 +45,7 @@ public class LetterColumn : MonoBehaviour,
     float baseY; // visual center offset
     float StepSize => letterHeight + verticalGap;
 
+ 
     public void Init(char correctLetter, int height)
     {
         if (content == null)
@@ -154,12 +155,14 @@ public class LetterColumn : MonoBehaviour,
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if(isSolved) return;
         dragY = content.anchoredPosition.y;
     }
 
 
     public void OnDrag(PointerEventData eventData)
     {
+        if (isSolved) return;
         dragY += eventData.delta.y;
 
         // clamp raw movement so column can't go too far

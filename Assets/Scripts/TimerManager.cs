@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 public class TimerManager : MonoBehaviour
 {
+    public WinTransition winTransition;
     public TextMeshProUGUI timerText;
     public Image timerFill; // <-- center shrinking bar
 
@@ -26,6 +27,7 @@ public class TimerManager : MonoBehaviour
 
     void Update()
     {
+        if (gm.levelSolved) return;
         if (time <= 0)
             return;
 
@@ -35,7 +37,13 @@ public class TimerManager : MonoBehaviour
         UpdateUI();
 
         if (time <= 0)
-            gm.Lose();
+        {
+            winTransition.PlayLose(() =>
+            {
+                gm.Lose();
+            });
+        }
+          
     }
 
     public void AddTime(float seconds)

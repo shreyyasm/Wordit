@@ -1,4 +1,8 @@
-﻿using UnityEngine;
+﻿using DG.Tweening;
+using System.Collections;
+using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameWordManager : MonoBehaviour
 {
@@ -15,6 +19,20 @@ public class GameWordManager : MonoBehaviour
 
     int level = 1;
     string currentWord;
+
+    public GameObject AddXPParent;
+    public TextMeshProUGUI AddXPText;
+
+    //XP Things
+    public RectTransform imageRect;   // image to grow
+    public Transform childParent;      // children source
+
+    public float baseWidth = 120f;     // width at 0 children
+    public float growthPerChild = 40f; // width added per child
+    public float animDuration = 0.35f;
+
+
+   
     void Awake()
     {
         Instance = this;
@@ -22,12 +40,17 @@ public class GameWordManager : MonoBehaviour
 
     void Start()
     {
+        TransitionManager.Instance.Open();
         FindAnyObjectByType<ColorSchemeManager>().ApplyRandomScheme();
-
+        PlayerProgressionManager.ResetProgress();
+        PlayerProgressionManager.ResetSessionXP();
         StartLevel();
+     
+      
+
         
     }
-    bool levelSolved = false;
+    public bool levelSolved = false;
 
     void Update()
     {
@@ -47,7 +70,8 @@ public class GameWordManager : MonoBehaviour
             {
                 NextLevel();
             });
-            PlayerProgressionManager.AddXPForClearedLevel(level);
+
+            StartCoroutine(XPDelay());
             hud.UpdatePlayerLevel();
             hud.UpdateCoins();
 
@@ -57,12 +81,45 @@ public class GameWordManager : MonoBehaviour
 
     }
 
+    IEnumerator XPDelay()
+    {
+        yield return new WaitForSeconds(0.5f);
 
+        // ✅ 1. ADD XP ONCE
+        PlayerProgressionManager.AddXPForClearedLevel();
+
+        // ✅ 2. SHOW POPUP
+        AddXPParent.SetActive(true);
+
+        // ✅ 3. READ THE REAL AWARDED XP
+        int shown = 0;
+        int target = PlayerProgressionManager.LastAwardedXP;
+       
+        // Safety
+        DOTween.Kill(AddXPText);
+
+        DOTween.To(() => shown, x =>
+        {
+            shown = x;
+            AddXPText.text = $"+{shown} XP";
+        }, target, 0.4f).SetEase(Ease.OutExpo);
+
+        // ✅ 4. SCALE ANIMATION
+        AddXPParent.transform.DOKill();
+        AddXPParent.transform.localScale = new Vector3(1f, 0f, 1f);
+
+        AddXPParent.transform
+            .DOScaleY(1f, 0.35f)
+            .SetEase(Ease.OutBack);
+    }
 
     void StartLevel()
     {
+        StartCoroutine(ChildCount());
+        AddXPParent.SetActive(false);
         levelSolved = false;
         winTransition.DelaodStreak();
+        winTransition.DeloadLose();
         int len = DifficultyManager.GetWordLength(level);
         currentWord = WordDictionary.GetWord(len);
 
@@ -82,14 +139,30 @@ public class GameWordManager : MonoBehaviour
         level++;
         StartLevel();
     }
-
+    
     public void Lose()
     {
-        hud.UpdateStreak(level);
+       
+      
+        LoseManager.instance.PlayLoseScreen();
+       
 
-        level = 1;
-        WordDictionary.ResetStreak();
-        StartLevel();
+    }
+    public void PlayAgain()
+    {
+        LoseManager.instance.CloseScree(() =>
+        {
+            PlayerProgressionManager.ResetProgress();
+            PlayerProgressionManager.ResetSessionXP();
+            WordDictionary.ResetStreak();
+
+            TransitionManager.Instance.Close(() =>
+            {
+                SceneManager.LoadScene(1);
+            });
+           
+        });
+       
 
     }
     public void UseHint()
@@ -118,6 +191,29 @@ public class GameWordManager : MonoBehaviour
         PlayerCurrencyManager.AddCoins(amount);
         hud.UpdateCoins();
     }
+    private int lastChildCount = 3;
+    public void UpdateWidth()
+    {
+        int childCount = childParent.childCount;
 
+        // 🚫 No change → no animation
+        if (childCount == lastChildCount)
+            return;
+      
+        lastChildCount = childCount;
 
+        float targetWidth = imageRect.rect.width + 103;
+
+        imageRect.DOKill();
+
+        imageRect.DOSizeDelta(
+            new Vector2(targetWidth, imageRect.sizeDelta.y),
+            animDuration
+        ).SetEase(Ease.OutBack);
+    }
+    IEnumerator ChildCount()
+    {
+        yield return new WaitForSeconds(1);
+        UpdateWidth();
+    }
 }

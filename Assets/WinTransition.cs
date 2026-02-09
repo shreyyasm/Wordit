@@ -8,6 +8,10 @@ public class WinTransition : MonoBehaviour
     public RectTransform winImage;
     public GameObject streakParent;
 
+    [Header("References")]
+    public RectTransform loseImage;
+    public GameObject loseParent;
+
     [Header("Timings")]
     public float startDelay = 0.6f;
     public float growXDuration = 0.25f;
@@ -15,11 +19,14 @@ public class WinTransition : MonoBehaviour
     public float expandYDuration = 0.25f;
 
     Coroutine playRoutine;
+    Coroutine playLoseRoutine;
     Sequence activeSequence;
+    Sequence activeLoseSequence;
 
     void Awake()
     {
         winImage.gameObject.SetActive(false);
+        loseImage.gameObject.SetActive(false);
     }
 
     public void Play(System.Action onComplete)
@@ -73,8 +80,69 @@ public class WinTransition : MonoBehaviour
         });
     }
 
+
     public void DelaodStreak()
     {
+        winImage.gameObject.SetActive(false);
         streakParent.SetActive(false);
+    }
+
+
+    public void PlayLose(System.Action onComplete)
+    {
+        // 🔥 stop any previous transition cleanly
+        if (playLoseRoutine != null)
+            StopCoroutine(playLoseRoutine);
+
+        if (activeLoseSequence != null && activeLoseSequence.IsActive())
+            activeLoseSequence.Kill();
+
+        playLoseRoutine = StartCoroutine(PlayDelayedLose(onComplete));
+    }
+
+    IEnumerator PlayDelayedLose(System.Action onComplete)
+    {
+        yield return new WaitForSeconds(0);
+        PlayInternalLose(onComplete);
+    }
+
+    void PlayInternalLose(System.Action onComplete)
+    {
+        loseImage.gameObject.SetActive(true);
+        loseParent.SetActive(true);
+
+        loseImage.localScale = new Vector3(0f, 1f, 1f);
+
+        activeLoseSequence = DOTween.Sequence();
+
+        // 1️⃣ grow horizontally
+        activeLoseSequence.Append(
+            loseImage.DOScaleX(1f, growXDuration)
+                    .SetEase(Ease.OutBack)
+        );
+
+        // 2️⃣ wait
+        activeLoseSequence.AppendInterval(waitBeforeExpand);
+
+        // 3️⃣ expand vertically
+        activeLoseSequence.Append(
+            loseImage.DOScaleY(20f, expandYDuration)
+                    .SetEase(Ease.InOutQuad)
+        );
+
+        // 4️⃣ finish
+        activeLoseSequence.OnComplete(() =>
+        {
+            //loseParent.gameObject.SetActive(false);
+            
+            activeLoseSequence = null;
+
+            onComplete?.Invoke();
+        });
+    }
+
+    public void DeloadLose()
+    {
+        loseParent.SetActive(false);
     }
 }

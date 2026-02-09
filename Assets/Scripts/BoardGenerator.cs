@@ -22,7 +22,7 @@ public class BoardGenerator : MonoBehaviour
             int maxH = DifficultyManager.GetMaxColumnHeight(level);
 
             int lockedCount =
-    DifficultyManager.GetLockedColumnCount(word.Length);
+            DifficultyManager.GetLockedColumnCount(word.Length);
 
             // choose unique locked indices
             HashSet<int> lockedIndices = new HashSet<int>();
@@ -61,10 +61,10 @@ public class BoardGenerator : MonoBehaviour
                 }
             }
 
-        } while (IsSolved(word) || IsInvalidStartState());
+        } while (IsAnyValidWordSolved() || IsInvalidStartState());
 
 
-
+      
 
     }
     bool IsSolvedAtStart(string targetWord)
@@ -131,7 +131,8 @@ public class BoardGenerator : MonoBehaviour
     }
 
 
-    public bool IsSolved(string target)
+   
+    public bool IsAnyValidWordSolved()
     {
         if (columns == null || columns.Length == 0)
             return false;
@@ -143,12 +144,11 @@ public class BoardGenerator : MonoBehaviour
             if (columns[i] != null)
                 formed += columns[i].GetCenterLetter();
             else
-                formed += target[i]; // 🔒 locked letter
+                formed += currentWord[i]; // locked
         }
 
-        return formed == target;
+        return WordDictionary.allWords.Contains(formed);
     }
-
     bool HasAtLeastOneValidWord()
     {
         return CheckColumn(0, "");
@@ -183,12 +183,12 @@ public class BoardGenerator : MonoBehaviour
 
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
-        foreach (var col in columns)
+        for (int i = 0; i < columns.Length; i++)
         {
-            if (col == null)
-                continue; // locked column handled separately
-
-            sb.Append(col.GetCenterLetter());
+            if (columns[i] != null)
+                sb.Append(columns[i].GetCenterLetter());
+            else
+                sb.Append(currentWord[i]); // 🔒 locked column
         }
 
         return sb.ToString();
