@@ -1,0 +1,66 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "word-it-game",
+  "post": {
+    "dir": "dist/client",
+    "entrypoints": {
+      "default": {
+        "inline": true,
+         "height": "regular",
+        "entry": "preview.html"
+      },
+      "game": {
+        "entry": "index.html"
+      },
+      "PostCreated": {
+        "inline": true,
+        "entry": "PostCreated.html"
+      }
+    }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "menu": {
+    "items": [
+      {
+        "label": "Create a new post",
+        "description": "word-it-game",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/post-create"
+      },
+      {
+        "label": "Example form",
+        "description": "Show a simple form",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/example-form"
+      }
+    ]
+  },
+  "forms": {
+    "exampleForm": "/internal/form/example-submit"
+  },
+  "triggers": {
+    "onAppInstall": "/internal/triggers/on-app-install"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "dev": {
+    "subreddit": "word_it_game_dev"
+  },
+  "permissions": {
+  "redis": true,
+  "reddit": {
+    "asUser": [
+      "SUBMIT_POST",
+      "SUBMIT_COMMENT",
+      "SUBSCRIBE_TO_SUBREDDIT"
+    ]
+  }
+  }
+}
