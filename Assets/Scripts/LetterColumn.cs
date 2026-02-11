@@ -45,7 +45,17 @@ public class LetterColumn : MonoBehaviour,
     float baseY; // visual center offset
     float StepSize => letterHeight + verticalGap;
 
- 
+    public GameObject upArrowBlock;
+    public GameObject downArrowBlock;
+
+    private GameObject upArrowInstance;
+    private GameObject downArrowInstance;
+
+    Arrow upArrow;
+    Arrow downArrow;
+
+    Color upArrowDefaultColor;
+    Color downArrowDefaultColor;
     public void Init(char correctLetter, int height)
     {
         if (content == null)
@@ -134,9 +144,49 @@ public class LetterColumn : MonoBehaviour,
         minY = minOffset * letterHeight;
 
         // 🔥 initial center highlight
+        SetupArrowBlocks();
+        CacheArrowScripts();
         UpdateLetterColors();
     }
+    void SetupArrowBlocks()
+    {
+        float topY = (centerIndex + 1) * StepSize;
+        float bottomY = -(letters.Length - centerIndex) * StepSize;
 
+        // cleanup old arrows
+        if (upArrowInstance) Destroy(upArrowInstance);
+        if (downArrowInstance) Destroy(downArrowInstance);
+
+        // UP arrow
+        if (upArrowBlock)
+        {
+            upArrowInstance =
+                Instantiate(upArrowBlock, content);
+
+            RectTransform rt =
+                upArrowInstance.GetComponent<RectTransform>();
+
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+
+            rt.localPosition = new Vector3(0, topY, 0);
+        }
+
+        // DOWN arrow
+        if (downArrowBlock)
+        {
+            downArrowInstance =
+                Instantiate(downArrowBlock, content);
+
+            RectTransform rt =
+                downArrowInstance.GetComponent<RectTransform>();
+
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+
+            rt.localPosition = new Vector3(0, bottomY, 0);
+        }
+    }
     void UpdateLetterColors()
     {
         if (isSolved)
@@ -159,20 +209,26 @@ public class LetterColumn : MonoBehaviour,
         dragY = content.anchoredPosition.y;
     }
 
-
+    [SerializeField] float dragSensitivity = 2.5f; // try 2–4
+    [SerializeField] float smoothSpeed = 15f;
+    float smoothY;
     public void OnDrag(PointerEventData eventData)
     {
         if (isSolved) return;
-        dragY += eventData.delta.y;
 
-        // clamp raw movement so column can't go too far
+        float delta = eventData.delta.y;
+
+        dragY += delta * dragSensitivity;
+
         float minY = minStep * StepSize;
         float maxY = maxStep * StepSize;
-
         dragY = Mathf.Clamp(dragY, minY, maxY);
 
-        // move freely with mouse/finger
-        content.anchoredPosition = new Vector2(0, dragY);
+        smoothY = Mathf.Lerp(smoothY, dragY, Time.unscaledDeltaTime * smoothSpeed);
+        content.anchoredPosition = new Vector2(0, smoothY);
+
+        if (Mathf.Abs(delta) > 0.1f)
+            ReactArrow(delta > 0 ? 1 : -1);
     }
 
 
@@ -181,6 +237,7 @@ public class LetterColumn : MonoBehaviour,
     {
         isScrolling = false; // cancel any scroll state
         SnapToNearestStep();
+        ResetArrows();
         //// determine nearest step
         //int targetStep =
         //    Mathf.RoundToInt(dragY / StepSize);
@@ -267,6 +324,7 @@ public class LetterColumn : MonoBehaviour,
         // scroll up = next letter
         // scroll down = previous letter
         int direction = scroll > 0 ? 1 : -1;
+        ReactArrow(direction);
 
         int targetStep = currentStep + direction;
         targetStep = Mathf.Clamp(targetStep, minStep, maxStep);
@@ -315,5 +373,32 @@ public class LetterColumn : MonoBehaviour,
 
         SnapToNearestStep();
     }
+    void CacheArrowScripts()
+    {
+        if (upArrowInstance)
+            upArrow =
+                upArrowInstance.GetComponent<Arrow>();
 
+        if (downArrowInstance)
+            downArrow =
+                downArrowInstance.GetComponent<Arrow>();
+    }
+    void ReactArrow(int direction)
+    {
+        if (direction > 0)
+        {
+            upArrow?.SetSolvedColor();
+            downArrow?.ResetColor();
+        }
+        else if (direction < 0)
+        {
+            downArrow?.SetSolvedColor();
+            upArrow?.ResetColor();
+        }
+    }
+    void ResetArrows()
+    {
+        upArrow?.ResetColor();
+        downArrow?.ResetColor();
+    }
 }

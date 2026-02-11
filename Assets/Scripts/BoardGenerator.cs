@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class BoardGenerator : MonoBehaviour
@@ -58,6 +59,9 @@ public class BoardGenerator : MonoBehaviour
                     LetterColumn lc = col.GetComponent<LetterColumn>();
                     lc.Init(word[i], height);
                     columns[i] = lc;
+
+
+                   
                 }
             }
 

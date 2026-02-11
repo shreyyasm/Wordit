@@ -1,87 +1,63 @@
-﻿using UnityEngine;
-using DG.Tweening;
+﻿using DG.Tweening;
 using System;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class TransitionManager : MonoBehaviour
 {
     public static TransitionManager Instance;
+
     [Header("Panels")]
     public RectTransform topPanel;
     public RectTransform bottomPanel;
+    public Canvas canvas;
 
     [Header("Animation")]
-    public float moveDistance = 600f;
     public float duration = 0.4f;
     public Ease ease = Ease.OutQuart;
+
+    private float moveDistance;
 
     private void Awake()
     {
         Instance = this;
+
+        // Get reference resolution height
+        CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
+        float referenceHeight = scaler.referenceResolution.y;
+
+        // push completely outside view
+        moveDistance = referenceHeight / 2f + topPanel.rect.height / 2f;
     }
+
     // =========================
-    // CLOSE → panels go OUT
+    // CLOSE → panels come IN
     // =========================
     public void Close(Action onComplete = null)
     {
-      
-        
-
         topPanel.DOKill();
         bottomPanel.DOKill();
 
-        // start offscreen
         topPanel.anchoredPosition = new Vector2(0, moveDistance);
         bottomPanel.anchoredPosition = new Vector2(0, -moveDistance);
 
-        Sequence seq = DOTween.Sequence();
-
-        // both come to center at same time
-        seq.Join(
-            topPanel.DOAnchorPosY(0f, duration)
-                    .SetEase(ease)
-        );
-
-        seq.Join(
-            bottomPanel.DOAnchorPosY(0f, duration)
-                       .SetEase(ease)
-        );
-
-        seq.OnComplete(() =>
-        {
-            onComplete?.Invoke();
-        });
+        DOTween.Sequence()
+            .Join(topPanel.DOAnchorPosY(0, duration).SetEase(ease))
+            .Join(bottomPanel.DOAnchorPosY(0, duration).SetEase(ease))
+            .OnComplete(() => onComplete?.Invoke());
     }
 
     // =========================
-    // OPEN → panels come IN
+    // OPEN → panels go OUT
     // =========================
     public void Open(Action onComplete = null)
     {
-
         topPanel.DOKill();
         bottomPanel.DOKill();
 
-        // start from center
-        topPanel.anchoredPosition = Vector2.zero;
-        bottomPanel.anchoredPosition = Vector2.zero;
-
-        Sequence seq = DOTween.Sequence();
-
-        // top goes UP
-        seq.Join(
-            topPanel.DOAnchorPosY(moveDistance, duration)
-                    .SetEase(ease)
-        );
-
-        // bottom goes DOWN
-        seq.Join(
-            bottomPanel.DOAnchorPosY(-moveDistance, duration)
-                       .SetEase(ease)
-        );
-
-        seq.OnComplete(() =>
-        {
-            onComplete?.Invoke();
-        });
+        DOTween.Sequence()
+            .Join(topPanel.DOAnchorPosY(moveDistance, duration).SetEase(ease))
+            .Join(bottomPanel.DOAnchorPosY(-moveDistance, duration).SetEase(ease))
+            .OnComplete(() => onComplete?.Invoke());
     }
 }

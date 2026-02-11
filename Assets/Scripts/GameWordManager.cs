@@ -165,6 +165,14 @@ public class GameWordManager : MonoBehaviour
        
 
     }
+    public void MainMenu()
+    {
+
+
+        SceneManager.LoadScene(0);
+
+
+    }
     public void UseHint()
     {
         if (!PlayerCurrencyManager.CanAfford(HINT_COST))

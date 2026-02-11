@@ -2,7 +2,7 @@
 - Project name: Wordit
 - Unity version: Unity 6000.0.62f1
 - Active game object:
-  - Name: Timer Text
+  - Name: Devvit Bridge
   - Tag: Untagged
-  - Layer: UI
+  - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

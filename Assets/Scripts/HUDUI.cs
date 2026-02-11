@@ -28,8 +28,9 @@ public class HUDUI : MonoBehaviour
 
     public void UpdatePlayerLevel()
     {
-        int playerLevel = PlayerProgressionManager.PlayerLevel;
+        int playerxp = PlayerProgressionManager.PlayerLevel;
         playerXPText.text = PlayerProgressionManager.PlayerBaseXP.ToString();
+        DevvitBridge.Instance.SaveScore(PlayerProgressionManager.PlayerBaseXP);
     }
 
     public void UpdateStreak(int streak)

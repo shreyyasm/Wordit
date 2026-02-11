@@ -15,6 +15,7 @@ using UnityEngine.UI; // For Image component
 
 public class DevvitBridge : MonoBehaviour
 {
+    public static DevvitBridge Instance;
     [Header("UI References")]
     public TMP_Text usernameText;
     public Image targetImage;
@@ -45,13 +46,16 @@ public class DevvitBridge : MonoBehaviour
         public string globalscore;
     }
 
-
+    private void Awake()
+    {
+        Instance = this;
+    }
     void Start()
     {
 
         // Fetch initial data when the game starts
         StartCoroutine(FetchInitData());
-        LoadPlayerName();
+       
     }
 
     // GET request to /api/init - Fetches username, previous time, and avatar
@@ -71,33 +75,37 @@ public class DevvitBridge : MonoBehaviour
         // Parse and store the data
         InitResponse data = JsonUtility.FromJson<InitResponse>(request.downloadHandler.text);
 
-        // Set username
-        currentUsername = data.username;
-        usernameText.text = "u/" + currentUsername;
+        if(usernameText != null)
+        {
+            // Set username
+            currentUsername = data.username;
+            usernameText.text = "u/" + currentUsername;
+
+        }
 
         // Store post ID
         currentPostId = data.postId;
 
-        // Set previous time (if available)
-        if (previousTimeText != null && !string.IsNullOrEmpty(data.previousTime))
-        {
-            previousTimeText.text = "Previous Time: " + data.previousTime + "s";
-        }
+        //// Set previous time (if available)
+        //if (previousTimeText != null && !string.IsNullOrEmpty(data.previousTime))
+        //{
+        //    previousTimeText.text = "Previous Time: " + data.previousTime + "s";
+        //}
 
 
-        // Set previous score (if available)
-        if (playerScoreText != null && !string.IsNullOrEmpty(data.score))
-        {
-            playerScore = int.Parse(data.score);
-            playerScoreText.text = "playerScore:  " + data.score;
-        }
+        //// Set previous score (if available)
+        //if (playerScoreText != null && !string.IsNullOrEmpty(data.score))
+        //{
+        //    playerScore = int.Parse(data.score);
+        //    playerScoreText.text = "playerScore:  " + data.score;
+        //}
 
-        // Set previous score (if available)
-        if (globalScoreText != null && !string.IsNullOrEmpty(data.globalscore))
-        {
-            globalScore = int.Parse(data.globalscore);
-            globalScoreText.text = "GlobalScore:  " + data.globalscore;
-        }
+        //// Set previous score (if available)
+        //if (globalScoreText != null && !string.IsNullOrEmpty(data.globalscore))
+        //{
+        //    globalScore = int.Parse(data.globalscore);
+        //    globalScoreText.text = "GlobalScore:  " + data.globalscore;
+        //}
 
         // Download avatar image
         if (!string.IsNullOrEmpty(data.snoovatarUrl))
@@ -143,7 +151,7 @@ public class DevvitBridge : MonoBehaviour
         public string postId;
         public string time; // Changed to string to match server expectations
     }
-  
+
     private IEnumerator SendCompletionRequest(float completionTime, Action<bool> onComplete)
     {
         // Prepare request
@@ -159,7 +167,7 @@ public class DevvitBridge : MonoBehaviour
 
         string jsonData = JsonUtility.ToJson(data);
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-        
+
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
@@ -176,7 +184,7 @@ public class DevvitBridge : MonoBehaviour
         {
             Debug.Log("Score Saved sucksexfully");
         }
-   
+
 
         // Invoke callback if provided
         try
@@ -366,15 +374,15 @@ public class DevvitBridge : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetKeyUp(KeyCode.T))
+        if (Input.GetKeyUp(KeyCode.T))
         {
-            SaveScore(10);
-           
+           // SaveScore(10);
+
         }
         if (Input.GetKeyUp(KeyCode.G))
         {
 
-            StartCoroutine(AddScore());
+           // StartCoroutine(AddScore());
 
         }
     }
@@ -402,100 +410,57 @@ public class DevvitBridge : MonoBehaviour
     }
     private const string PLAYER_NAME_KEY = "PLAYER_NAME";
 
-    [Header("UI References")]
-    public TMP_InputField nameInputField;
-    public TextMeshProUGUI nameDisplayText;
-
-  
-    // 🔹 Called by a Button
-    public void SavePlayerName()
-    {
-        string playerName = nameInputField.text;
-
-        if (string.IsNullOrEmpty(playerName))
-        {
-            Debug.LogWarning("Player name is empty, not saving.");
-            return;
-        }
-
-        PlayerPrefs.SetString(PLAYER_NAME_KEY, playerName);
-        PlayerPrefs.Save();
-
-        nameDisplayText.text = playerName;
-
-        Debug.Log("✅ Player name saved: " + playerName);
-    }
-
-    // 🔹 Loads name on start
-    private void LoadPlayerName()
-    {
-        if (PlayerPrefs.HasKey(PLAYER_NAME_KEY))
-        {
-            string savedName = PlayerPrefs.GetString(PLAYER_NAME_KEY);
-
-            nameDisplayText.text = savedName;
-            nameInputField.text = savedName;
-
-            Debug.Log("✅ Player name loaded: " + savedName);
-        }
-        else
-        {
-            Debug.Log("ℹ️ No saved player name found.");
-        }
-    }
-
+   
+   
+   
 
     //Save Score
 
 
     [System.Serializable]
-    private class ScoreData
+    private class SaveScorePayload
     {
 
         public string type;
         public string username;
         public string postId;
-        public string score;
+        public int score;
     }
 
 
     // Sends level completion data to server. Accepts an optional callback invoked with true on success, false on failure.
     public void SaveScore(int score)
     {
-        StartCoroutine(SendScoreRequest(score));
+        StartCoroutine(SaveScoree(score));
     }
-    private IEnumerator SendScoreRequest(int score)
+    IEnumerator SaveScoree(int finalScore)
     {
-        // Prepare request
-        UnityWebRequest request = new UnityWebRequest("/api/save-score", "POST");
-
-        ScoreData data = new()
+        SaveScorePayload payload = new SaveScorePayload
         {
-            type = "save-score",
-            username = currentUsername,
-            postId = currentPostId,
-            score = score.ToString(),
+            score = finalScore
         };
 
-        string jsonData = JsonUtility.ToJson(data);
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+        string json = JsonUtility.ToJson(payload);
 
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        UnityWebRequest request =
+            new UnityWebRequest("/api/save-score", "POST");
+
+        request.uploadHandler =
+            new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
 
         yield return request.SendWebRequest();
 
-        bool success = request.result == UnityWebRequest.Result.Success;
-
-        if (!success)
+        if (request.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogWarning("Error sending score data: " + request.error + " — this will occur when running in Unity.");
+            Debug.LogError("Save score failed");
+            Debug.LogError("Status: " + request.responseCode);
+            Debug.LogError("Body: " + request.downloadHandler.text);
         }
         else
         {
-            Debug.Log("Score is saved: " + data.score);
-            playerScoreText.text = "playerScore:  " + data.score;
+            Debug.Log("Score saved successfully: " + finalScore);
         }
     }
 
@@ -551,4 +516,6 @@ public class DevvitBridge : MonoBehaviour
             globalScoreText.text = "GlobalScore:  " + data.globalscore;
         }
     }
+
+
 }

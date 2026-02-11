@@ -116,7 +116,7 @@ public static class PlayerProgressionManager
     // ===== DEBUG / RESET =====
     public static void ResetProgress()
     {
-        PlayerPrefs.DeleteKey(LEVEL_KEY);
+        //PlayerPrefs.DeleteKey(LEVEL_KEY);
         PlayerPrefs.DeleteKey(XP_KEY);
         PlayerPrefs.DeleteKey("LAST_GAINED_XP");
     }
