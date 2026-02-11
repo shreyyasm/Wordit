@@ -5,7 +5,7 @@ import { createPost } from '../core/post';
 
 export const menu = new Hono();
 
-menu.post('/post-create', async (c) => {
+menu.post('/custom-post-create', async (c) => {
   try {
     const post = await createPost();
 

@@ -37,7 +37,7 @@ public class HUDUI : MonoBehaviour
     {
         streakText.text = streak.ToString();
         // <sprite=0> assumes your coin sprite is index 0
-        streakText.text = $"<sprite=0>{streak}";
+        streakText.text = $"<sprite=0>{streak - 1}";
     }
     public void UpdateCoins()
     {

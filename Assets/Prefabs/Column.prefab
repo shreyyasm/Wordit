@@ -84,7 +84,7 @@ MonoBehaviour:
   scrollSnapDelay: 0.2
   upArrowBlock: {fileID: 812209669995770949, guid: ff9b7185034a41846b2caee90d1b7c6a, type: 3}
   downArrowBlock: {fileID: 9024866925714526344, guid: e520e3058008ee44b95d32e46416c878, type: 3}
-  dragSensitivity: 1
+  dragSensitivity: 3
   smoothSpeed: 30
 --- !u!1 &3110238215597585478
 GameObject:

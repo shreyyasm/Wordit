@@ -42,7 +42,7 @@ public class DevvitBridge : MonoBehaviour
         public string username;
         public string snoovatarUrl;
         public string previousTime; // will be an empty string if no previous time exists
-        public string score;
+        public int score;
         public string globalscore;
     }
 
@@ -300,73 +300,82 @@ public class DevvitBridge : MonoBehaviour
                 Debug.LogWarning("❌ Custom post creation failed");
         }));
     }
-
+ 
     private IEnumerator SendCustomPostCreateRequest(Action<bool> onComplete)
     {
-        // Prepare request
-        UnityWebRequest request =
-            new UnityWebRequest("/api/custom-post-create", "POST");
-
-        // No body required
-        request.uploadHandler = new UploadHandlerRaw(new byte[0]);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-
-        // Send request
-        yield return request.SendWebRequest();
-
-        bool success = request.result == UnityWebRequest.Result.Success;
-
-        if (!success)
-        {
-            Debug.LogWarning(
-                "Error creating custom post: " +
-                request.error +
-                " | Response: " +
-                request.downloadHandler.text
-            );
-        }
-        else
-        {
-            Debug.Log("Custom post created successfully: " +
-                      request.downloadHandler.text);
-            // ✅ Parse JSON
-            CustomPostResponse response =
-                JsonUtility.FromJson<CustomPostResponse>(
-                    request.downloadHandler.text
-                );
-
 #if UNITY_WEBGL && !UNITY_EDITOR
-    if (!string.IsNullOrEmpty(response.postUrl))
+    // ✅ Build base URL from Devvit WebView
+    string origin = Application.absoluteURL;
+    Uri uri = new Uri(origin);
+    string baseUrl = uri.Scheme + "://" + uri.Host;
+    string apiUrl = baseUrl + "/api/custom-post-create";
+
+    // ✅ Prepare JSON body (ONLY ONCE)
+    string json = JsonUtility.ToJson(new CustomPostCreateRequest
     {
-        Debug.Log("Opening post: " + response.postUrl);
-        OpenPostWithUrl(response.postUrl); // 👈 THIS is the key
+        subredditName = "word_it_game_dev"
+    });
+
+    UnityWebRequest request = new UnityWebRequest(apiUrl, "POST");
+    byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+
+    request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+    request.downloadHandler = new DownloadHandlerBuffer();
+    request.SetRequestHeader("Content-Type", "application/json");
+
+    yield return request.SendWebRequest();
+
+    bool success = request.result == UnityWebRequest.Result.Success;
+
+    if (!success)
+    {
+        Debug.LogWarning(
+            "Error creating custom post: " +
+            request.error +
+            " | Response: " +
+            request.downloadHandler.text
+        );
     }
     else
     {
-        Debug.LogError("postUrl missing in response");
+        Debug.Log("Custom post created successfully: " +
+                  request.downloadHandler.text);
+
+        CustomPostResponse response =
+            JsonUtility.FromJson<CustomPostResponse>(
+                request.downloadHandler.text
+            );
+
+        if (!string.IsNullOrEmpty(response.postUrl))
+        {
+            Debug.Log("Opening post: " + response.postUrl);
+            OpenPostWithUrl(response.postUrl);
+        }
+        else
+        {
+            Debug.LogError("postUrl missing in response");
+        }
     }
+
+    onComplete?.Invoke(success);
+#else
+        Debug.LogWarning("Custom post creation only works in WebGL.");
+        onComplete?.Invoke(false);
+        yield break;
 #endif
-
-        }
-
-        // Invoke callback safely
-        try
-        {
-            onComplete?.Invoke(success);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError("Error invoking custom post callback: " + ex.Message);
-        }
     }
+    [Serializable]
+    public class CustomPostCreateRequest
+    {
+        public string subredditName;
+    }
+
     [Serializable]
     public class CustomPostResponse
     {
-        public bool success;
+        public string status;
         public string postUrl;
     }
-
 
     [DllImport("__Internal")]
     private static extern void OpenPostWithUrl(string url);
